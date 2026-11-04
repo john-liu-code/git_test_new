@@ -160,14 +160,19 @@ def call_jev(endpoint: str, api_key: str, body: dict, timeout_ms: int,
 
 
 def parse_response(payload):
-    """JevCodec::ParseResponse 同款（result envelope）：任一异常返回 (False, ...)。"""
+    """双 envelope 解析（与 latency 分支 codec 同款兼容策略）：
+    ① Clef 格式：{"result": {"answers": {...}, ...}}
+    ② 顶层 answers 格式（如 StartLux-Decision 等模型）：{"answers": {...}, ...}
+    任一异常返回 (False, ...)。"""
     try:
         if not isinstance(payload, dict):
             return False, {}
         result = payload.get("result")
-        if not isinstance(result, dict):
-            return False, {}
-        answers_obj = result.get("answers")
+        if isinstance(result, dict):
+            src = result
+        else:
+            src = payload
+        answers_obj = src.get("answers")
         if not isinstance(answers_obj, dict) or not answers_obj:
             return False, {}
         answers = {}

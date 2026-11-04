@@ -76,7 +76,7 @@ python3 jev_decision_standalone.py --dataset sampled_intent1_100.xlsx --report r
 | 上下文 | `context_user`/`context_assistant` 按服务端测试脚本同款格式**客户端拼接**（"以下是之前的对话：\n用户：…\n助手：…\n当前用户问题：…"）；无上下文用例发送纯 `cur_query` |
 | 候选技能 | 7 个可转发技能（description 与 SKILL.md 逐字一致）+ 设备类别过滤（gui-control [1,2]、film-tv [3]） |
 | 请求体 | `{"model","state","questions"}`；问题顺序 q1,q2,q5,q3,q4 与题目原文逐字一致；q3 为 choice 题型带 criteria |
-| 响应解析 | Clef `result` 包裹格式；任一字段缺失/题型不符 → 整轮判无效（全零落盘） |
+| 响应解析 | 双 envelope 兼容：① Clef `result` 包裹格式；② **顶层 `answers` 格式**（如 StartLux-Decision 等模型直出 answers）；任一字段缺失/题型不符 → 整轮判无效（全零落盘） |
 | 决策 | 与 ResolveJevRoute 同款：q3 门槛（conf≥0.6 且 maxp≥0.8）→ no_skill+直答条件 → 直转条件（q1≥0.8、q4≥0.7、q5≥0.8）→ 其余 none |
 
 ## 5. 与服务端对比验证方法
@@ -91,7 +91,7 @@ python3 jev_decision_standalone.py --dataset sampled_intent1_100.xlsx --report r
 |---|---|
 | `ModuleNotFoundError: openpyxl` | `python3 -m pip install openpyxl` |
 | 连接超时/证书错误 | 确认网络可达 Cloudflare；容器/内网环境用 `JEV_VERIFY_TLS=0` 或 `JEV_CA_BUNDLE` 指定 CA |
-| 全部全零行 | 检查 endpoint/key 是否正确；Clef 偶发异常时可对同一用例重跑对比 |
+| 全部全零行 | 检查 endpoint/key 是否正确；Clef 偶发异常时可对同一用例重跑对比。**换用其他模型端点时**：若响应是顶层 `answers` 格式（无 `result` 包裹），脚本已兼容；若格式再变（如 answers 在别的键下），把原始响应贴出来即可定位 |
 | 脚本绕过系统代理 | 已内置（不带 ProxyHandler），与测试环境惯例一致 |
 
 ## 7. 冒烟验证记录
